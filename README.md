@@ -19,6 +19,7 @@ logos and flat graphics
 scanned images
 
 🎯 Why this exists
+
 This tool was built to solve a practical problem:
 
 Small or low-quality images often become unusable when enlarged (blur, mush, artifacts).
@@ -37,6 +38,7 @@ no hallucinated details
 stable, predictable output
 
 🧠 How it works (simplified)
+
 Input image is treated as a sampled color field
 The algorithm builds a triangle mesh approximation
 Colors are interpolated across triangles (RGBA)
@@ -47,6 +49,7 @@ Key idea:
 Pixels are no longer the fundamental unit — triangles are.
 
 ⚙️ Usage
+
 pipeline_battle_test.exe <input_image> <output_dir> <scale> <triangle_limit> <param>
 
 Example:
@@ -60,6 +63,7 @@ triangle_limit — limit on triangle count (0 = automatic)
 param — internal parameter (currently not required for typical usage)
 
 📦 Output
+
 The tool currently renders results directly to raster images (e.g. PNG/TIFF).
 
 Internally, the image is represented as a triangle mesh, but:
@@ -67,6 +71,7 @@ Internally, the image is represented as a triangle mesh, but:
 there is currently no standardized external format for storing this representation.
 
 ⚠️ Limitations
+
 The algorithm is general-purpose, but some image types are harder than others.
 
 Known weak spots:
@@ -84,6 +89,7 @@ but local detail may be simplified or unevenly approximated
 This is mainly due to the current RMSE-based optimization, which does not fully capture perceptual texture importance.
 
 ✅ Where it works best
+
 portraits / people
 old or scanned photos
 anime-style artwork
@@ -114,6 +120,8 @@ It is already very effective in many scenarios, but:
 some edge cases are not fully solved
 no GUI
 no standard file format yet
+
+
 📜 License
 
 MIT License
