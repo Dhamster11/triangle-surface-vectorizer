@@ -8,6 +8,7 @@ Instead, the image is approximated using a dense triangle mesh with per-vertex c
 The result behaves like a resolution-independent image approximation, which is especially useful for upscaling without blur.
 
 ✨ What it does
+
 Reconstructs raster images as a triangle mesh (RGBA surface)
 Allows high-resolution rendering without typical interpolation blur
 Works as a deterministic alternative to AI upscaling
