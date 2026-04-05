@@ -132,7 +132,54 @@ MIT License
 
 Built as a personal tool for image reconstruction and print workflows.
 
-## Build
+## 🏗️ Build
 
-Open the project in Visual Studio (with CMake support enabled).
-CMakePresets.json is provided — no additional setup required.
+### Requirements
+
+- CMake 3.20+
+- C++ compiler with C++17 support  
+  (MSVC / Visual Studio 2022 recommended on Windows)
+
+---
+
+### Build using CMake (recommended)
+
+```bash
+cmake -B build
+cmake --build build --config Release
+```
+
+After build, the executable will be located in:
+
+```
+build/Release/
+```
+
+---
+
+### Build using Visual Studio
+
+1. Open the project folder in Visual Studio  
+2. CMake will configure automatically using `CMakePresets.json`  
+3. Select configuration: **Release**  
+4. Build the project  
+
+---
+
+### Notes
+
+- `CMakePresets.json` is included, so no manual configuration is required in Visual Studio  
+- On Windows, `--config Release` is required because Visual Studio uses multi-config builds  
+- The project has no external dependencies (third-party headers are included)  
+
+---
+
+### Troubleshooting
+
+If something fails to build, try removing the `build/` directory and re-running the commands:
+
+```bash
+rm -rf build
+cmake -B build
+cmake --build build --config Release
+```
