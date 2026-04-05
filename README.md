@@ -137,7 +137,7 @@ Built as a personal tool for image reconstruction and print workflows.
 ### Requirements
 
 - CMake 3.20+
-- C++ compiler with C++17 support  
+- C++ compiler with C++20 support  
   (MSVC / Visual Studio 2022 recommended on Windows)
 
 ---
