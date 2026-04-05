@@ -7,6 +7,7 @@ Instead, the image is approximated using a dense triangle mesh with per-vertex c
 
 The result behaves like a resolution-independent image approximation, which is especially useful for upscaling without blur.
 
+
 ✨ What it does
 
 Reconstructs raster images as a triangle mesh (RGBA surface)
@@ -17,6 +18,7 @@ portraits
 anime artwork
 logos and flat graphics
 scanned images
+
 
 🎯 Why this exists
 
@@ -36,6 +38,7 @@ Result:
 no blur
 no hallucinated details
 stable, predictable output
+
 
 🧠 How it works (simplified)
 
@@ -62,6 +65,7 @@ scale — upscale factor (e.g. 2, 4, 8, etc.)
 triangle_limit — limit on triangle count (0 = automatic)
 param — internal parameter (currently not required for typical usage)
 
+
 📦 Output
 
 The tool currently renders results directly to raster images (e.g. PNG/TIFF).
@@ -69,6 +73,7 @@ The tool currently renders results directly to raster images (e.g. PNG/TIFF).
 Internally, the image is represented as a triangle mesh, but:
 
 there is currently no standardized external format for storing this representation.
+
 
 ⚠️ Limitations
 
@@ -91,10 +96,15 @@ This is mainly due to the current RMSE-based optimization, which does not fully 
 ✅ Where it works best
 
 portraits / people
+
 old or scanned photos
+
 anime-style artwork
+
 logos and clean graphics
+
 images that need to be printed at larger sizes than their original resolution allows
+
 
 💡 Typical use case
 
@@ -111,6 +121,7 @@ stable geometric approximation
 consistent visual structure
 print-friendly output
 
+
 🧪 Project status
 
 This is an experimental tool built for real-world use, not a polished product.
@@ -125,6 +136,7 @@ no standard file format yet
 📜 License
 
 MIT License
+
 
 👤 Author
 
