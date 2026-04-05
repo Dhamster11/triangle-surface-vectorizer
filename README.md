@@ -131,3 +131,8 @@ MIT License
 ## 👤 Author
 
 Built as a personal tool for image reconstruction and print workflows.
+
+## Build
+
+Open the project in Visual Studio (with CMake support enabled).
+CMakePresets.json is provided — no additional setup required.
