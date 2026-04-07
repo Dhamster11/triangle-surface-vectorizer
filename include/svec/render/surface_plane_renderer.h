@@ -29,6 +29,11 @@ struct SurfacePlaneRenderOptions {
     f64 wire_half_width_px = 0.5;
     bool skip_degenerate_triangles = true;
     SurfaceRenderTransform transform{};
+    bool smooth_internal_edges = true;
+    f64 internal_edge_blend_radius_px = 0.85;
+    f64 internal_edge_blend_strength = 1.0;
+    bool preserve_discontinuities = true;
+    f64 discontinuity_threshold = 0.045;
 };
 
 struct SurfacePlaneRenderStats {
@@ -37,6 +42,7 @@ struct SurfacePlaneRenderStats {
     u32 triangles_skipped_degenerate = 0;
     u64 pixels_shaded = 0;
     u64 wire_pixels_shaded = 0;
+    u64 internal_edge_samples_blended = 0;
 };
 
 struct SurfacePlaneRenderResult {
