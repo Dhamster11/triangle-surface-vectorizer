@@ -33,6 +33,7 @@ namespace {
         u32 upscale_factor = 4;
         u32 max_triangles = 0;  // 0 = auto
         f64 target_error = 0.0; // 0 = auto
+        bool stop_on_progress_stall = true; // default: enabled
     };
 
     struct AutoProfile {
@@ -52,8 +53,10 @@ namespace {
 
     void PrintUsage(const char* exe) {
         std::cout
-            << "Usage:\n  " << exe << " <input_image> <output_dir> [upscale_factor] [max_triangles_or_0_auto] [target_error_or_0_auto]\n\n"
-            << "Example:\n  " << exe << " input.jpg out 4 0 0\n";
+            << "Usage:\n  " << exe << " <input_image> <output_dir> [upscale_factor] [max_triangles_or_0_auto] [target_error_or_0_auto] [--no-stall|--stall]\n\n"
+            << "Examples:\n"
+            << "  " << exe << " input.jpg out 4 0 0\n"
+            << "  " << exe << " input.jpg out 4 500000 0 --no-stall\n";
     }
 
     bool ParseU32(const char* text, u32& out_value) {
@@ -78,11 +81,44 @@ namespace {
 
     bool ParseArgs(int argc, char** argv, AppConfig& cfg) {
         if (argc < 3) return false;
-        cfg.input_path = argv[1];
-        cfg.output_dir = argv[2];
-        if (argc >= 4 && !ParseU32(argv[3], cfg.upscale_factor)) return false;
-        if (argc >= 5 && !ParseU32(argv[4], cfg.max_triangles)) return false;
-        if (argc >= 6 && !ParseF64(argv[5], cfg.target_error)) return false;
+
+        int positional_index = 0;
+        for (int i = 1; i < argc; ++i) {
+            const std::string arg = argv[i];
+
+            if (arg == "--no-stall") {
+                cfg.stop_on_progress_stall = false;
+                continue;
+            }
+            if (arg == "--stall") {
+                cfg.stop_on_progress_stall = true;
+                continue;
+            }
+
+            switch (positional_index) {
+            case 0:
+                cfg.input_path = arg;
+                break;
+            case 1:
+                cfg.output_dir = arg;
+                break;
+            case 2:
+                if (!ParseU32(argv[i], cfg.upscale_factor)) return false;
+                break;
+            case 3:
+                if (!ParseU32(argv[i], cfg.max_triangles)) return false;
+                break;
+            case 4:
+                if (!ParseF64(argv[i], cfg.target_error)) return false;
+                break;
+            default:
+                return false;
+            }
+
+            ++positional_index;
+        }
+
+        if (positional_index < 2) return false;
         if (cfg.upscale_factor == 0) cfg.upscale_factor = 1;
         return true;
     }
@@ -118,11 +154,9 @@ namespace {
         const f64 mean_edge = edge_map.Pixels().empty() ? 0.0 : edge_sum / static_cast<f64>(edge_map.Pixels().size());
         const f64 strong_fraction = edge_map.Pixels().empty() ? 0.0 : strong / static_cast<f64>(edge_map.Pixels().size());
 
-        // normalize edge metrics
         const f64 mean_edge_n = Saturate(mean_edge * 4.0);
         const f64 strong_fraction_n = Saturate(strong_fraction * 6.0);
 
-        // final complexity
         const f64 complexity = Saturate(
             0.55 * mean_edge_n
             + 0.45 * strong_fraction_n
@@ -179,6 +213,7 @@ namespace {
         os << "auto_target_error=" << profile.target_error << "\n";
         os << "bootstrap_splits=" << profile.bootstrap_splits << "\n";
         os << "batch_size=" << profile.batch_size << "\n";
+        os << "stop_on_progress_stall=" << (refine_opts.safety.stop_on_progress_stall ? 1 : 0) << "\n";
         os << "splits_requested=" << refine_report.splits_requested << "\n";
         os << "stop_reason=" << ToString(refine_report.stop_reason) << "\n";
         os << "splits_performed=" << refine_report.splits_performed << "\n";
@@ -237,7 +272,6 @@ namespace {
         os << "vertex_moves_applied=" << opt_report.TotalVertexMovesApplied() << "\n";
     }
 
-
     void WriteRefineStageStats(
         const fs::path& path,
         const AppConfig& cfg,
@@ -258,6 +292,7 @@ namespace {
         os << "bootstrap_splits=" << profile.bootstrap_splits << "\n";
         os << "batch_size=" << profile.batch_size << "\n";
         os << "target_mean_error=" << refine_opts.target_mean_error << "\n";
+        os << "stop_on_progress_stall=" << (refine_opts.safety.stop_on_progress_stall ? 1 : 0) << "\n";
         os << "splits_requested=" << refine_report.splits_requested << "\n";
         os << "splits_performed=" << refine_report.splits_performed << "\n";
         os << "stop_reason=" << ToString(refine_report.stop_reason) << "\n";
@@ -380,7 +415,8 @@ int main(int argc, char** argv) {
         refine_opts.error.peak_weight = 0.75;
         refine_opts.plane_fit.interior_barycentric_samples = 1;
 
-        // Step 3: edge-biased heap prioritization.
+        refine_opts.safety.stop_on_progress_stall = cfg.stop_on_progress_stall;
+
         refine_opts.edge_bias.enabled = true;
         refine_opts.edge_bias.mean_weight = 0.60;
         refine_opts.edge_bias.peak_weight = 2.20;
@@ -388,6 +424,10 @@ int main(int argc, char** argv) {
         refine_opts.edge_bias.strong_edge_threshold = 0.40;
         refine_opts.edge_bias.strong_edge_bonus = 0.90;
         refine_opts.edge_bias.max_multiplier = 4.00;
+
+        std::cout << "  progress stall stop="
+            << (refine_opts.safety.stop_on_progress_stall ? "enabled" : "disabled")
+            << "\n";
 
         const auto refine_t0 = std::chrono::high_resolution_clock::now();
         PyramidRefinementReport refine_report = PyramidRefineMesh(mesh, reference, edge_map, refine_opts);
