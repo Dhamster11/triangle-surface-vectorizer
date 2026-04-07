@@ -49,13 +49,19 @@ This approach instead:
 ## ⚙️ Usage
 
 ```bash
-pipeline_battle_test.exe <input_image> <output_dir> <scale> <triangle_limit> <param>
+pipeline_battle_test.exe <input_image> <output_dir> [scale] [triangle_limit] [target_error] [--no-stall|--stall]
 ```
 
-### Example
+### Basic example
 
 ```bash
 pipeline_battle_test.exe input.png out 4 0 0
+```
+
+### High-quality example
+
+```bash
+pipeline_battle_test.exe input.png out 4 500000 0 --no-stall
 ```
 
 ### Parameters
@@ -63,8 +69,104 @@ pipeline_battle_test.exe input.png out 4 0 0
 - `input_image` — path to the source image
 - `output_dir` — directory where results are saved
 - `scale` — upscale factor (for example: `2`, `4`, `8`)
-- `triangle_limit` — limit on triangle count (`0` = automatic)
-- `param` — internal parameter (currently not required for typical usage)
+- `triangle_limit` — triangle budget (`0` = automatic budget selection)
+- `target_error` — target error (`0` = automatic)
+- `--no-stall` — disables early stopping by progress stall
+- `--stall` — explicitly enables progress-stall stopping
+
+## ⚡ Quality vs Triangle Budget
+
+The quality of the result is **directly controlled by the triangle budget**.
+
+- Lower triangle counts → faster results, but rougher approximation
+- Higher triangle counts → significantly better detail, especially in complex regions
+
+### Automatic mode
+
+If you run the tool like this:
+
+```bash
+pipeline_battle_test.exe input.png out 4 0 0
+```
+
+then:
+
+- `triangle_limit = 0` means **automatic triangle budget**
+- `target_error = 0` means **automatic target error**
+- progress-stall stopping stays **enabled by default**
+
+This is convenient for normal usage and quick tests.
+
+### Manual high-quality mode
+
+If the result looks too rough, simplified, or under-detailed, try:
+
+1. replacing `triangle_limit = 0` with a much larger manual value
+2. disabling progress-stall stopping with `--no-stall`
+
+For example:
+
+```bash
+pipeline_battle_test.exe input.png out 4 500000 0 --no-stall
+```
+
+This tells the tool to:
+
+- use a much larger triangle budget
+- keep refining even when progress becomes slow
+
+That often improves difficult regions, but it also makes the run much slower.
+
+## ⏱️ Progress-stall stopping
+
+By default, the tool may stop refinement early when additional improvement becomes too small.
+
+This is useful for normal runs because it prevents wasting time on tiny gains.
+
+However, for difficult images, disabling this behavior can improve quality:
+
+```bash
+pipeline_battle_test.exe input.png out 4 500000 0 --no-stall
+```
+
+Use this mode when you want to push quality harder, especially on:
+
+- foliage
+- grass
+- clouds
+- water
+- dense textures
+- complex natural photos
+
+### Important trade-off
+
+Disabling progress-stall stopping may increase runtime significantly.
+
+At high triangle budgets, processing may take **several minutes or more**.
+
+## 📈 Practical recommendation
+
+If the output looks rough:
+
+```text
+1. keep scale as needed
+2. replace triangle_limit = 0 with a larger manual value
+3. add --no-stall for maximum refinement
+```
+
+A good first manual value is:
+
+```text
+500000
+```
+
+Then increase further if needed.
+
+### Typical behavior
+
+- simple images → good quality with relatively small budgets
+- portraits / anime / clean graphics → usually converge much faster
+- heavily textured photos → may require **hundreds of thousands of triangles**
 
 ## 📦 Output
 
@@ -87,8 +189,10 @@ In such cases:
 
 - the image usually remains usable
 - but local detail may be simplified or unevenly approximated
+- better quality often requires a much larger triangle budget
+- disabling progress-stall stopping may help on difficult scenes
 
-This is mainly due to the current **RMSE-based optimization**, which does not fully capture perceptual texture importance.
+This is mainly due to the current optimization strategy, which still spends budget inefficiently in some highly detailed regions.
 
 ## ✅ Where it works best
 
@@ -151,7 +255,7 @@ cmake --build build --config Release
 
 After build, the executable will be located in:
 
-```
+```text
 build/Release/
 ```
 
@@ -162,15 +266,15 @@ build/Release/
 1. Open the project folder in Visual Studio  
 2. CMake will configure automatically using `CMakePresets.json`  
 3. Select configuration: **Release**  
-4. Build the project  
+4. Build the project
 
 ---
 
 ### Notes
 
-- `CMakePresets.json` is included, so no manual configuration is required in Visual Studio  
-- On Windows, `--config Release` is required because Visual Studio uses multi-config builds  
-- The project has no external dependencies (third-party headers are included)  
+- `CMakePresets.json` is included, so no manual configuration is required in Visual Studio
+- On Windows, `--config Release` is required because Visual Studio uses multi-config builds
+- The project has no external dependencies (third-party headers are included)
 
 ---
 
